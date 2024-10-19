@@ -100,7 +100,7 @@ app.get('/badge/status/:id', c => {
 
 app.get('/badge/playing/:id', c => {
 	const activities = presences.get(c.req.param('id'))?.activities
-		?.filter(a => a.type === ActivityType.Playing && !['Visual Studio Code', 'IntelliJ IDEA Community', 'IntelliJ IDEA Ultimate'].includes(a.name)) ?? []
+		?.filter(a => a.type === ActivityType.Playing && !['Visual Studio Code', 'Code', 'IntelliJ IDEA Community', 'IntelliJ IDEA Ultimate'].includes(a.name)) ?? []
 
 	c.header('Content-Type', 'image/svg+xml; charset=utf-8')
 	c.header('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate')
@@ -137,6 +137,31 @@ app.get('/badge/vscode/:id', c => {
 
 	return c.body(badge)
 })
+
+app.get('/badge/vscode/:id', c => {
+	const activity = presences.get(c.req.param('id'))?.activities?.find(a => a.name === 'Code' && a.details && a.state)
+
+	c.header('Content-Type', 'image/svg+xml; charset=utf-8')
+	c.header('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate')
+
+	const style = resolveStyle(c.req.query('style'))
+
+	let badge = makeBadge({
+		label: c.req.query('label') ?? 'coding',
+		message: activity && activity.details && activity.state
+			? `${activity.details.replace('Editing ', '')} in ${activity.state.replace(/(Workspace: | \(Workspace\))/g, '').replace('Glitch:', '🎏')}`
+			: c.req.query('fallback') ?? 'nothing rn',
+		labelColor: c.req.query('labelColor') ?? 'gray',
+		color: c.req.query('color') ?? '#23a7f2',
+		style
+	})
+
+	if (!['social', 'for-the-badge'].includes(style) && c.req.query('hideLogo') !== 'true')
+		badge = injectLogo(badge, vscode)
+
+	return c.body(badge)
+})
+
 
 app.get('/badge/intellij/:id', c => {
 	const activity = presences.get(c.req.param('id'))?.activities?.find(a => a.name === 'IntelliJ IDEA Community' && a.details && a.state && a.state !== 'Idling')
