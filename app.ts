@@ -12,7 +12,7 @@ import 'npm:bufferutil@^4.0.7'
 import { makeBadge } from 'npm:badge-maker@^3.3.1'
 
 import logos from './logos.json' assert { type: 'json' }
-const { vscode, intellij, spotify, crunchyroll } = logos
+const { vscode, intellij, spotify, crunchyroll, tidal } = logos
 
 const rest = new REST().setToken(env.TOKEN)
 
@@ -235,6 +235,31 @@ app.get('/badge/spotify/:id', c => {
 
 	return c.body(badge)
 })
+
+app.get('/badge/tidal/:id', c => {
+	const activity = presences.get(c.req.param('id'))?.activities?.find(a => a.type === ActivityType.Listening && a.name === 'Tidal' && a.details && a.state)
+
+	c.header('Content-Type', 'image/svg+xml; charset=utf-8')
+	c.header('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate')
+
+	const style = resolveStyle(c.req.query('style'))
+
+	let badge = makeBadge({
+		label: c.req.query('label') ?? 'listening to',
+		message: activity && activity.details && activity.state
+			? `${activity.details.replace(/\(.*\)/g, '')} by ${formatter.format(activity.state.split('; '))}`
+			: c.req.query('fallback') ?? 'nothing rn',
+		labelColor: c.req.query('labelColor') ?? 'gray',
+		color: c.req.query('color') ?? '#1db954',
+		style
+	})
+
+	if (!['social', 'for-the-badge'].includes(style) && c.req.query('hideLogo') !== 'true')
+		badge = injectLogo(badge, tidal)
+
+	return c.body(badge)
+})
+
 
 app.get('/badge/crunchyroll/:id', c => {
 	const activity = presences.get(c.req.param('id'))?.activities?.find(a => a.type === ActivityType.Watching && a.name === 'Crunchyroll' && a.details)
