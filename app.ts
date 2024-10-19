@@ -100,7 +100,7 @@ app.get('/badge/status/:id', c => {
 
 app.get('/badge/playing/:id', c => {
 	const activities = presences.get(c.req.param('id'))?.activities
-		?.filter(a => a.type === ActivityType.Playing && !['Visual Studio Code', 'IntelliJ IDEA Ultimate'].includes(a.name)) ?? []
+		?.filter(a => a.type === ActivityType.Playing && !['Visual Studio Code', 'IntelliJ IDEA Community'].includes(a.name)) ?? []
 
 	c.header('Content-Type', 'image/svg+xml; charset=utf-8')
 	c.header('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate')
@@ -139,7 +139,7 @@ app.get('/badge/vscode/:id', c => {
 })
 
 app.get('/badge/intellij/:id', c => {
-	const activity = presences.get(c.req.param('id'))?.activities?.find(a => a.name === 'IntelliJ IDEA Ultimate' && a.details && a.state && a.state !== 'Idling')
+	const activity = presences.get(c.req.param('id'))?.activities?.find(a => a.name === 'IntelliJ IDEA Community' && a.details && a.state && a.state !== 'Idling')
 
 	c.header('Content-Type', 'image/svg+xml; charset=utf-8')
 	c.header('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate')
